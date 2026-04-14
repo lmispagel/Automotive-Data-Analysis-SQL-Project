@@ -1,0 +1,133 @@
+----Total number of customers who placed orders----
+
+SELECT
+  COUNT(customer_id) AS TOTAL_CUSTOMERS
+FROM customer_t ;
+
+----Distribution of the customers across states----
+
+SELECT 
+  state,
+  COUNT(customer_id) AS TOTAL_CUSTOMERS
+FROM customer_t 
+GROUP BY state ;
+
+----Top 5 vehicle makers preferred by customers----
+
+SELECT
+  P.vehicle_maker,
+  COUNT(C.customer_id) AS TOTAL_CUSTOMERS
+FROM customer_t C JOIN order_t O USING(customer_id)
+  JOIN product_t P USING(product_id)
+GROUP BY vehicle_maker
+ORDER BY TOTAL_CUSTOMERS DESC
+LIMIT 5 ; 
+
+----Most preferred vehicle maker in each state----
+
+SELECT 
+  C.state,
+  P.vehicle_maker,
+FROM customer_t C JOIN order_t O USING(customer_id)
+  JOIN product_t P USING(product_id)
+GROUP BY C.state
+ORDER BY COUNT(C.customer_id) DESC;
+
+----Overall average rating given by customers----
+
+SELECT
+ ROUND(AVG(CUST_REVIEWS), 2) AS AVG_FEEDBACK
+FROM (
+  SELECT customer_feedback,
+     CASE WHEN customer_feedback = ‘Very Bad’ THEN 1
+          WHEN customer_feedback = ‘Bad’ THEN 2
+          WHEN customer_feedback = ‘Okay’ THEN 3
+          WHEN customer_feedback = ‘Good’ THEN 4
+          WHEN customer_feedback = ‘Very Good’ THEN 5
+  END AS CUST_REVIEWS
+  FROM order_t) AS FEEDBACK ;
+
+----Average Feedback Per Quarter----
+
+SELECT
+  ROUND(AVG(CUST_REVIEWS), 2) AS AVG_FEEDBACK,
+  quarter_number
+FROM (
+  SELECT customer_feedback, quarter_number,
+    CASE WHEN customer_feedback = ‘Very Bad’ THEN 1
+      WHEN customer_feedback = ‘Bad’ THEN 2
+      WHEN customer_feedback = ‘Okay’ THEN 3
+      WHEN customer_feedback = ‘Good’ THEN 4
+      WHEN customer_feedback = ‘Very Good’ THEN 5
+    END AS CUST_REVIEWS
+    FROM order_t) AS FEEDBACK
+    GROUP BY quarter_number ;
+
+----Percentage distribution of feedback per customer----
+
+SELECT quarter_number,
+  ROUND(SUM(CASE WHEN customer_feedback = ‘Very Bad’ THEN 1
+  ELSE 0 END)*100.0/COUNT(*), 2) AS “VERYBAD_PCT”,
+  ROUND(SUM(CASE WHEN customer_feedback = ‘Bad’ THEN 1 
+  ELSE 0 END)*100.0/COUNT(*), 2) AS “BAD_PCT”,
+  ROUND(SUM(CASE WHEN customer_feedback = ‘Okay’ THEN 1 
+  ELSE 0 END)*100.0/COUNT(*), 2) AS “OKAY_PCT”,
+  ROUND(SUM(CASE WHEN customer_feedback = ‘Good’ THEN 1 
+  ELSE 0 END)*100.0/COUNT(*), 2) AS “GOOD_PCT”,
+  ROUND(SUM(CASE WHEN customer_feedback = ‘Very Good’ THEN 1 
+  ELSE 0 END)*100.0/COUNT(*), 2) AS “VERYGOOD_PCT”
+FROM order_t
+GROUP BY quarter_number
+ORDER BY quarter_number ASC ;
+
+----Number of orders per quarter----
+
+SELECT quarter_number,
+  COUNT(order_id)
+FROM order_t
+GROUP BY quarter_number
+ORDER BY quarter_number ASC ;
+
+----Net revenure generated----
+
+SELECT 
+  ROUND(SUM(quantity*(vehicle_price-(vehicle_price*(discount/100)))), 2)
+AS NET_REVENUE 
+FROM order_t ;
+
+----Quarter-over-quarter percent change in net revenue----
+
+SELECT quarter_number, NET_REVENUE, PREV_Q_REVENUE,
+  ROUND(((NET_REVENUE-PREV_Q_REVENUE)/PREV_Q_REVENUE)*100.0, 2) AS PCT_CHANGE
+FROM (
+  SELECT NET_REVENUE, quarter_number,
+   LAG(NET_REVENUE) OVER(ORDER BY quarter_number ASC)
+   AS PREV_Q_REVENUE
+  FROM (
+    SELECT quarter_number,
+    ROUND(SUM(quantity*(vehicle_price-(vehicle_price*(discount/100))), 2)
+    AS NET_REVENUE 
+    FROM order_t
+    GROUP BY quarter_number)AS LAG_TABLE) AS Q_OVER_Q ;
+
+-----Trend in net revenure and orders by quarters----
+
+SELECT quarter_number,
+  ROUND(SUM(quantity*(vehicle_price-(vehicle_price*(discount/100)))) ,2) AS NET_REV_PER_Q,
+  COUNT(order_id) AS TOTAL_ORDERS_PER_Q
+FROM order_t
+GROUP BY quarter_number ;
+
+----Average discount offered by different credit cards----
+
+SELECT C.credit_card_type,
+ ROUND(AVG(O.discount)*100,0) AS AVG_DISCOUNT
+FROM customer_t C JOIN order_t O USING(customer_id)
+GROUP BY C.credit_card_type ; 
+
+----Average time taken to ship order per quarter----
+
+SELECT order_id, order_date, ship_date,
+     JULIANDAY(ship_date)-JULIANDAY(order_date) AS DATE_DIFF
+FROM order_t
+GROUP BY order_id ;
