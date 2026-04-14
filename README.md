@@ -3,4 +3,4 @@ New-Wheels has experienced a steady decline in sales over the past year, driven 
 
 Based on the analysis, three core solutions emerge to reverse this trajectory: reducing average shipping times, as faster delivery directly correlates with higher customer satisfaction scores; leveraging those improved scores to rebuild the company's reputation and attract new customers by signaling greater reliability; and using stronger ratings as a marketing asset to drive customer growth, increase net revenue, and achieve greater quarter-over-quarter stability.
 
-Please Note: Outputs extracted from queries were across 3 tables with over 1000 rows per table. To see output images refer to "Automotive-Data-Analysis-SQL-Project.pdf"
+Please Note: Outputs extracted from queries were across 3 tables with over 1000 rows per table. To see output images refer to "Automotive Data Analysis SQL Project.pdf"
